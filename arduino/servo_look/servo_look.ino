@@ -10,7 +10,7 @@
 const int SERVO_PIN  = 9;     // servo signal pin on the shield
 const int LOOK_ANGLE = 90;    // position while someone is looking
 const int AWAY_ANGLE = 150;   // position while nobody is looking (LOOK_ANGLE + 60)
-const int STEP_DELAY = 20;    // ms between each degree (higher = slower, less current)
+const int STEP_DELAY = 5;     // ms between each degree (0 = full speed; raise it if the board resets)
 const int HOLD_MS    = 300;   // keep powered this long after arriving, then release
 
 Servo servo;
