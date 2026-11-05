@@ -23,6 +23,7 @@ unsigned long arrivedAt = 0;
 
 void setup() {
   Serial.begin(9600);
+  pinMode(LED_BUILTIN, OUTPUT);   // on-board LED shows the last command
   servo.write(current);       // set the position before attaching
   servo.attach(SERVO_PIN);
   arrivedAt = millis();
@@ -31,8 +32,8 @@ void setup() {
 void loop() {
   if (Serial.available() > 0) {
     char c = Serial.read();
-    if (c == '1') target = LOOK_ANGLE;
-    else if (c == '0') target = AWAY_ANGLE;
+    if (c == '1') { target = LOOK_ANGLE; digitalWrite(LED_BUILTIN, HIGH); }
+    else if (c == '0') { target = AWAY_ANGLE; digitalWrite(LED_BUILTIN, LOW); }
   }
 
   if (current != target) {
