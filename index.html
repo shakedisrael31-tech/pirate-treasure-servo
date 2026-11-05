@@ -458,7 +458,6 @@ btnCamera.onclick = async () => {
     document.getElementById("placeholder").style.display = "none";
     btnCamera.classList.add("lit");
     say(writer ? "Camera ready" : "Camera ready — now connect the Arduino");
-    updateMusic();   // nobody is looking yet -> music starts
     requestAnimationFrame(loop);
   } catch (e) {
     say("Error: " + e.message, true);
@@ -509,14 +508,16 @@ function loop() {
     if (lookingNow) { onCount++; offCount = 0; }
     else            { offCount++; onCount = 0; }
 
+    // music: stops on the very first frame a looking face is seen,
+    // comes back once nobody has looked for FRAMES_TO_OFF frames
+    updateMusic(!lookingNow && offCount >= FRAMES_TO_OFF);
+
     if (!lookingState && onCount >= FRAMES_TO_ON) {
       lookingState = true;
       send("1");
-      updateMusic();
     } else if (lookingState && offCount >= FRAMES_TO_OFF) {
       lookingState = false;
       send("0");
-      updateMusic();
     }
 
     statusEl.textContent = lookingState ? "LOOKING" : "NOT LOOKING";
@@ -543,9 +544,14 @@ function fadeTo(target, done) {
     }
   }, 30);
 }
-function updateMusic() {
-  if (lookingState) {
-    fadeTo(0, () => music.pause());          // look detected -> stop
+let musicOn = false;
+function updateMusic(shouldPlay) {
+  if (shouldPlay === musicOn) return;
+  musicOn = shouldPlay;
+  if (!shouldPlay) {
+    clearInterval(fadeTimer);                 // look detected -> stop instantly
+    music.pause();
+    music.volume = 0;
   } else {
     music.play().catch(e => say("Music blocked: " + e.message));
     fadeTo(1);                                // not looking -> play
