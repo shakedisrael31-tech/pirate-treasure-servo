@@ -1,6 +1,6 @@
 # You will never find out what the treasure is
 
-A pirate-themed camera installation: when someone looks straight at the camera, a servo motor moves 25°. When they look away, it returns.
+A pirate-themed camera installation: a servo motor sits at 150° while nobody is looking, and swings 60° to 90° when someone looks straight at the camera.
 
 Gaze detection runs in the browser with [MediaPipe Face Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker) (head direction + iris position), and commands are sent to the Arduino over USB using the Web Serial API.
 
@@ -48,4 +48,4 @@ python python/look_detector.py --port COM5
 
 ## Serial protocol
 
-9600 baud. `'1'` = move to 115°, `'0'` = return to 90°. The sketch moves one degree every 4 ms (about 0.1 s for the full 25°) to soften current spikes.
+9600 baud. `'1'` = someone is looking → 90°, `'0'` = nobody is looking → 150°. The sketch moves one degree every 4 ms (about 0.25 s for the full 60°) to soften current spikes.
