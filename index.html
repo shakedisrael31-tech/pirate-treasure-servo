@@ -393,6 +393,22 @@ let lookSince = null, awaySince = null;
 let lastVideoTime = -1;
 
 // ---------- Arduino (Web Serial) ----------
+async function openPort(port) {
+  await port.open({ baudRate: 9600 });
+  writer = port.writable.getWriter();
+  btnSerial.classList.add("lit");
+  document.getElementById("btnTestOn").disabled = false;
+  document.getElementById("btnTestOff").disabled = false;
+  send(lookingState ? "1" : "0");
+}
+
+function lostConnection() {
+  if (writer) { try { writer.releaseLock(); } catch (e) {} }
+  writer = null;
+  btnSerial.classList.remove("lit");
+  say("Arduino disconnected — reconnecting when it comes back...", true);
+}
+
 btnSerial.onclick = async () => {
   if (writer) return;
   if (!("serial" in navigator)) {
@@ -401,24 +417,32 @@ btnSerial.onclick = async () => {
   }
   try {
     const port = await navigator.serial.requestPort();
-    await port.open({ baudRate: 9600 });
-    writer = port.writable.getWriter();
+    await openPort(port);
     say("Arduino connected ✔");
-    btnSerial.classList.add("lit");
-    document.getElementById("btnTestOn").disabled = false;
-    document.getElementById("btnTestOff").disabled = false;
-    send(lookingState ? "1" : "0");
   } catch (e) {
     say("Connection failed: " + e.message + " (close the Serial Monitor in Arduino IDE)", true);
   }
 };
+
+// auto-reconnect: if the board resets or the cable blips, reopen it when it reappears
+if ("serial" in navigator) {
+  navigator.serial.addEventListener("disconnect", () => lostConnection());
+  navigator.serial.addEventListener("connect", async (e) => {
+    if (writer) return;
+    // give the Leonardo a moment to finish booting
+    setTimeout(async () => {
+      try { await openPort(e.target); say("Arduino reconnected ✔"); }
+      catch (err) { say("Reconnect failed: " + err.message, true); }
+    }, 1500);
+  });
+}
 
 async function send(cmd) {
   if (!writer) return;
   try {
     await writer.write(new TextEncoder().encode(cmd));
   } catch (e) {
-    say("Send error: " + e.message, true);
+    lostConnection();
   }
 }
 
