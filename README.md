@@ -48,4 +48,4 @@ python python/look_detector.py --port COM5
 
 ## Serial protocol
 
-9600 baud. `'1'` = someone is looking → 90°, `'0'` = nobody is looking → 150°. The sketch moves one degree every 4 ms (about 0.25 s for the full 60°) to soften current spikes.
+9600 baud. `'1'` = someone is looking → 90°, `'0'` = nobody is looking → 150°. The sketch moves one degree every 20 ms and releases the servo when idle, to keep current spikes low enough for USB power. With an external supply you can lower STEP_DELAY for faster motion.
