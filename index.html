@@ -337,6 +337,7 @@
       <div class="stage">
         <div class="placeholder" id="placeholder">☠ press the camera coin ☠</div>
         <video id="video" autoplay playsinline muted></video>
+        <audio id="music" src="music/theme.mp3" loop preload="auto"></audio>
         <canvas id="overlay"></canvas>
         <div id="status">NOT LOOKING</div>
         <div id="msg">Press the camera coin to begin</div>
@@ -457,6 +458,7 @@ btnCamera.onclick = async () => {
     document.getElementById("placeholder").style.display = "none";
     btnCamera.classList.add("lit");
     say(writer ? "Camera ready" : "Camera ready — now connect the Arduino");
+    updateMusic();   // nobody is looking yet -> music starts
     requestAnimationFrame(loop);
   } catch (e) {
     say("Error: " + e.message, true);
@@ -510,15 +512,44 @@ function loop() {
     if (!lookingState && onCount >= FRAMES_TO_ON) {
       lookingState = true;
       send("1");
+      updateMusic();
     } else if (lookingState && offCount >= FRAMES_TO_OFF) {
       lookingState = false;
       send("0");
+      updateMusic();
     }
 
     statusEl.textContent = lookingState ? "LOOKING" : "NOT LOOKING";
     statusEl.classList.toggle("on", lookingState);
   }
   requestAnimationFrame(loop);
+}
+
+// ---------- soundtrack: plays while NOT looking, stops when a look is detected ----------
+const music = document.getElementById("music");
+music.volume = 0;
+let fadeTimer = null;
+function fadeTo(target, done) {
+  clearInterval(fadeTimer);
+  fadeTimer = setInterval(() => {
+    const step = 0.08;
+    const v = music.volume;
+    if (Math.abs(v - target) <= step) {
+      music.volume = target;
+      clearInterval(fadeTimer);
+      if (done) done();
+    } else {
+      music.volume = v + (target > v ? step : -step);
+    }
+  }, 30);
+}
+function updateMusic() {
+  if (lookingState) {
+    fadeTo(0, () => music.pause());          // look detected -> stop
+  } else {
+    music.play().catch(e => say("Music blocked: " + e.message));
+    fadeTo(1);                                // not looking -> play
+  }
 }
 
 // return the servo when the page closes
