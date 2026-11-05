@@ -14,9 +14,9 @@ const int STEP_DELAY = 20;    // ms between each degree (higher = slower, less c
 const int HOLD_MS    = 300;   // keep powered this long after arriving, then release
 
 Servo servo;
-// Start where the servo physically rests (90) and glide to AWAY_ANGLE slowly.
-// Jumping straight to 150 at power-up is a full-speed move that browns out USB.
-int current = LOOK_ANGLE;
+// At power-up we don't know where the servo is (90 or 150), so start halfway
+// and glide from there: the first jump is at most 30 degrees instead of 60.
+int current = (LOOK_ANGLE + AWAY_ANGLE) / 2;
 int target  = AWAY_ANGLE;
 unsigned long lastStep = 0;
 unsigned long arrivedAt = 0;
