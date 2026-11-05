@@ -48,4 +48,4 @@ python python/look_detector.py --port COM5
 
 ## Serial protocol
 
-9600 baud. `'1'` = move to 115°, `'0'` = return to 90°. The sketch moves one degree every 15 ms to limit current spikes.
+9600 baud. `'1'` = move to 115°, `'0'` = return to 90°. The sketch moves one degree every 4 ms (about 0.1 s for the full 25°) to soften current spikes.

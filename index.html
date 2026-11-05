@@ -359,8 +359,8 @@
 <script type="module">
 
 // ---------- settings ----------
-const FRAMES_TO_ON  = 5;   // consecutive "looking" frames to trigger
-const FRAMES_TO_OFF = 10;  // consecutive "not looking" frames to release
+const LOOK_ON_MS  = 100;   // must look this long (ms) to trigger
+const LOOK_OFF_MS = 400;   // must look away this long (ms) to release
 // ------------------------------
 
 const video     = document.getElementById("video");
@@ -389,7 +389,7 @@ function say(text, sticky = false) {
 let faceLandmarker = null;
 let writer = null;
 let lookingState = false;
-let onCount = 0, offCount = 0;
+let lookSince = null, awaySince = null;
 let lastVideoTime = -1;
 
 // ---------- Arduino (Web Serial) ----------
@@ -448,7 +448,7 @@ btnCamera.onclick = async () => {
 
     say("Requesting camera...", true);
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+      video: { width: { ideal: 640 }, height: { ideal: 480 } },
     });
     video.srcObject = stream;
     await video.play();
@@ -505,17 +505,18 @@ function loop() {
       valuesEl.textContent = "no face detected";
     }
 
-    if (lookingNow) { onCount++; offCount = 0; }
-    else            { offCount++; onCount = 0; }
+    const now = performance.now();
+    if (lookingNow) { awaySince = null; lookSince ??= now; }
+    else            { lookSince = null; awaySince ??= now; }
 
     // music: stops on the very first frame a looking face is seen,
-    // comes back once nobody has looked for FRAMES_TO_OFF frames
-    updateMusic(!lookingNow && offCount >= FRAMES_TO_OFF);
+    // comes back once nobody has looked for LOOK_OFF_MS
+    updateMusic(!lookingNow && awaySince !== null && now - awaySince >= LOOK_OFF_MS);
 
-    if (!lookingState && onCount >= FRAMES_TO_ON) {
+    if (!lookingState && lookSince !== null && now - lookSince >= LOOK_ON_MS) {
       lookingState = true;
       send("1");
-    } else if (lookingState && offCount >= FRAMES_TO_OFF) {
+    } else if (lookingState && awaySince !== null && now - awaySince >= LOOK_OFF_MS) {
       lookingState = false;
       send("0");
     }

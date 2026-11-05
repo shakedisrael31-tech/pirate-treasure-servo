@@ -9,7 +9,7 @@
 const int SERVO_PIN  = 9;    // servo signal pin on the shield
 const int REST_ANGLE = 90;   // rest angle
 const int MOVE_ANGLE = 25;   // how many degrees to move when looked at
-const int STEP_DELAY = 15;   // ms between each degree (higher = slower)
+const int STEP_DELAY = 4;    // ms between each degree (higher = slower, gentler on power)
 
 Servo servo;
 int current = REST_ANGLE;
